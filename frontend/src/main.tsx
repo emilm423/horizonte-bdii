@@ -48,6 +48,7 @@ type Account = {
   cash: number;
   quantity: number;
   last_price: number;
+  entry_cost: number;
   initial: number;
 };
 type Risk = {
@@ -257,6 +258,8 @@ function App() {
     ? account.cash + account.quantity * account.last_price
     : 50000;
   const initial = account?.initial || data?.risk.initial || 50000;
+  const unrealizedPnl = account ? account.quantity * account.last_price - account.entry_cost : 0;
+  const realizedPnl = equity - initial - unrealizedPnl;
   const closed = rows.filter((d) => d.pnl !== null);
   const winrate = closed.length
     ? closed.filter((d) => (d.pnl || 0) > 0).length / closed.length
@@ -440,7 +443,7 @@ function App() {
                     <strong className={equity >= initial ? "green" : "red"}>
                       {pct(equity / initial - 1)}
                     </strong>
-                    <small>Después de costos y deslizamiento</small>
+                    <small>PnL total: {money(equity - initial)} USDT</small>
                   </article>
                   <article>
                     <span>Operaciones cerradas</span>
@@ -560,6 +563,14 @@ function App() {
                     </p>
                     <dl>
                       <div>
+                        <dt>PnL realizado</dt>
+                        <dd>{money(realizedPnl)} USDT</dd>
+                      </div>
+                      <div>
+                        <dt>PnL no realizado</dt>
+                        <dd>{money(unrealizedPnl)} USDT</dd>
+                      </div>
+                      <div>
                         <dt>Posición actual</dt>
                         <dd>{(account?.quantity || 0).toLocaleString("es-MX", { maximumFractionDigits: 8 })} {selection.replace("USDT", "")}</dd>
                       </div>
@@ -616,6 +627,7 @@ function App() {
                           <th>Acción</th>
                           <th>Pronóstico</th>
                           <th>Patrimonio USDT</th>
+                          <th>PnL cerrado USDT</th>
                           <th>Motivo</th>
                         </tr>
                       </thead>
@@ -632,6 +644,7 @@ function App() {
                             </td>
                             <td>{pct(d.forecast)}</td>
                             <td>{money(d.equity)}</td>
+                            <td>{d.pnl === null ? "—" : money(d.pnl)}</td>
                             <td>{d.reason}</td>
                           </tr>
                         ))}

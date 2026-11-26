@@ -2,7 +2,7 @@
 
 Proyecto académico de Emiliano Muñoz Martín. Integra el protocolo de los capítulos 7–11, un notebook Colab y una aplicación React/TypeScript con FastAPI, Ollama local y SQLite.
 
-## Estado de la entrega final (23-11-2026)
+## Estado de la entrega y versión 1.1.0 (26-11-2026)
 
 Esta copia incluye los quince estudios reales, sus pesos T4, TE completado, tres comparaciones replay de BTC, dos decisiones actuales, SQLite y evidencia de Ollama local ejecutadas el 20-11-2026. Leer ../LEEME_PRIMERO.md, ../Informe_Final_Horizonte.pdf y ../NOTAS_DE_VERIFICACION.md para resultados y límites. No es una demostración de rentabilidad general: el modelo solo ganó 0.99% en el replay BTC; con Ollama perdió 0.75%.
 
@@ -10,7 +10,110 @@ La integración local requirió corregir propuestas SELL inválidas; se conserva
 
 El paquete ya contiene artifacts/ y data/. Para revisarlo, abrir start_windows.bat sin volver a importar ni ejecutar TE. Al reiniciar recupera el estado y arranca pausado. Las instrucciones siguientes para Colab describen reconstrucción, no una obligación de reentrenar esta entrega.
 
-## Inicio recomendado
+## Entrega ejecutiva y cinco requisitos finales
+
+1. Presentación ejecutiva: https://chatgpt.com/space/page_b377ba69412881918f6ac914f29437ab . Nueve diapositivas con notas de exposición. Se puede exportar a PowerPoint desde su interfaz.
+2. Git del sistema: repositorio_fuente.bundle en la raíz de entrega, con historial local y etiquetas de las versiones de entrega. Para una URL de GitHub/GitLab hay que publicar en la cuenta del alumno, sin secretos.
+3. README: este documento contiene instalación, arquitectura, versiones, avances, configuración, datos, PnL, pruebas, errores y límites. CHANGELOG.md detalla los cambios.
+4. Mercado real: este sistema usa MEXC, una de las dos opciones permitidas. No integra Polymarket. Obtiene precios públicos reales; las compras/ventas son exclusivamente Paper.
+5. Operaciones y PnL: el panel muestra acción, posición, efectivo, patrimonio, PnL total/realizado/no realizado y PnL por operación cerrada. La exportación conserva todos los registros; la tabla del panel muestra los últimos ocho.
+
+## Versiones de entrega y avances
+
+| Versión o hito | Fecha | Avance | Evidencia |
+|---|---|---|---|
+| Preparación y paginación | 20-11-2026 | Auditoría UTC, 1500 observaciones mínimas, descarga por páginas de hasta 200 días | audit.json y *.source.json |
+| Investigación Colab | 20-11-2026 | Quince activos, 303 ajustes GPU, elección VA y TE congelado | training.json, freeze.json, metricas_finales.csv |
+| state-actions-v2 | 20-11-2026 | Bloquea propuestas SELL sin posición y guarda razón original | Intento fallido separado y nuevo replay |
+| v1.0.0 | 23-11-2026 | Snapshot de entrega, posición/efectivo visibles, login rechazado registrado sin secretos | Primer commit del repositorio portable |
+| v1.1.0 | 26-11-2026 | PnL total, realizado y no realizado explícitos; PnL en tabla; README/CHANGELOG y presentación ejecutiva | Commit y tag de la entrega actual |
+
+Los hitos anteriores a v1.0.0 son una reconstrucción documental con archivos de ejecución, no commits históricos inventados. v1.0.0 y v1.1.0 identifican snapshots de entrega. La numeración del proyecto no equivale a la versión de TensorFlow o del modelo Ollama. Ningún ajuste de interfaz del 26-11 cambia pesos, umbrales, señales o resultados guardados.
+
+## Inicio rápido con los resultados ya incluidos
+
+1. Extraer el ZIP a una carpeta normal. Cerrar el servidor anterior si ocupa el puerto 8000.
+2. Abrir Ollama. El modelo configurado es qwen2.5:3b. Si falta, ejecutar `ollama pull qwen2.5:3b` en PowerShell.
+3. Abrir esta carpeta proyecto/ y ejecutar start_windows.bat. Requiere Python 3.12 accesible como `py -3.12`.
+4. Esperar a Uvicorn running y abrir http://127.0.0.1:8000/ . Copiar el valor APP_API_KEY del archivo .env al formulario.
+5. La base se recupera pausada. Para mostrar el replay guardado elegir BTCUSDT, Replay histórico y la estrategia. No hace falta volver a ejecutarlo.
+6. Para mostrar datos realmente actuales elegir MEXC actual · diario y pulsar Iniciar con red disponible. Una vela ya procesada se omite; HOLD también es una decisión válida. Pausar al terminar la demostración.
+
+Los registros entregados se capturaron el 20-11-2026. Abrirlos el 26-11 no los convierte en cotizaciones de hoy. La actualización actual exige una consulta nueva a MEXC; si falla la red, el agente pausa y muestra el incidente.
+
+## Versiones técnicas y requisitos
+
+| Componente | Registro o requisito |
+|---|---|
+| Windows local | Python 3.12; Windows 11; entorno .venv propio |
+| Entrenamiento Colab | Python 3.13.16, TensorFlow 2.21.0, Tesla T4; evidencia por ajuste |
+| Ollama ejecutado | 0.40.16, modelo qwen2.5:3b local; RTX 4050 Laptop disponible |
+| Frontend | React 19; TypeScript 5; Vite 6; dependencias exactas de instalación en package-lock.json |
+| Backend | FastAPI, Pydantic, httpx, pandas, NumPy, scikit-learn, joblib; rangos en requirements.txt |
+| Inferencia de redes | TensorFlow según requirements-training.txt; no requiere T4 local |
+| Informe | ReportLab y matplotlib; scripts en ../herramientas/ |
+| Modelo guardado | Contrato y hashes por activo en freeze.json y docs/model_versions.csv |
+
+La evidencia de hardware identifica el equipo; no demuestra GPU efectiva para cada consulta LLM. El registro efectivo de GPU T4 sí corresponde al entrenamiento. Para modificar/recompilar UI se necesita Node compatible con Vite 6; no hace falta para usar la compilación incluida. Los rangos de requirements no son un lock completo del entorno. evidencia/entorno_revision.json identifica el entorno de empaquetado, que es distinto del Colab.
+
+## Qué significa PnL en la pantalla
+
+PnL significa ganancia o pérdida. Se calcula por libro independiente y en USDT:
+
+- PnL total = patrimonio actual menos capital inicial.
+- PnL realizado = suma de los resultados netos de las operaciones ya cerradas.
+- PnL no realizado = PnL total menos PnL realizado. Con una posición abierta equivale a su valoración menos su costo de entrada, bajo los supuestos del simulador.
+- Retorno acumulado = PnL total dividido entre capital inicial.
+- Patrimonio = efectivo más cantidad por última cotización o cierre, según Live o Replay.
+
+No se agregan los quince libros como si fueran una cartera conjunta. Las comisiones son 0% en Paper, pero el deslizamiento adverso del 0.05% afecta el precio de compra y venta. `cost` registra comisión, por eso puede ser cero aunque la compra tenga una pequeña pérdida inicial por deslizamiento.
+
+Ejemplo guardado, replay BTC de 20 sesiones: Solo modelo cerró con 50,493.12 y PnL +493.12 USDT; Ollama 49,626.25 y PnL -373.75; pasiva 49,899.06 y PnL -100.94. Los tres libros terminaron sin posición. Son resultados de desarrollo en las mismas fechas después de corregir software, no una prueba independiente del agente ni rentabilidad garantizada.
+
+## Guía de demostración ejecutiva
+
+1. Mostrar esta README y `git log --oneline --decorate`; explicar v1.0.0 y v1.1.0.
+2. Abrir BTCUSDT / Replay histórico / Solo modelo. Mostrar operaciones guardadas, cinco trades cerrados y PnL realizado +493.12 USDT.
+3. Cambiar a Agente con Ollama y a Comprar y mantener. Comparar el PnL sobre las mismas fechas y riesgos.
+4. Cambiar a MEXC actual · diario. Identificar fecha de la última vela y usar Iniciar solo para una consulta actual. Esperar un ciclo y pausar. No prometer BUY: puede corresponder HOLD.
+5. Abrir Bitácora y mostrar duplicados o el fallo real de Ollama. Explicar que detener conserva posiciones.
+
+No abrir TE otra vez para la exposición. No cambiar umbrales buscando un resultado mejor. El profesor pidió datos de MEXC o Polymarket; la integración MEXC ya cubre esa alternativa. Todas las operaciones demostradas son simuladas, tal como exige el protocolo base.
+
+## API y estructura
+
+- core/: datos, ventanas, selección, simulación académica e informe Colab.
+- backend/: autenticación, datos actuales, predictor, Ollama, controles, SQLite y comparación.
+- frontend/src/: UI editable React/TypeScript; frontend/dist/: compilación servida por FastAPI.
+- data/raw/: datos originales y fichas de descarga; data/paper.sqlite: libros y registros.
+- artifacts/: modelos, escaladores, predicciones, métricas, auditorías y T4.
+- tests/: pruebas con fixtures sintéticos. docs/model_versions.csv: versiones por hash.
+
+API local documentada en http://127.0.0.1:8000/docs . /api/health informa estado general; /api/session inicia sesión; /api/state expone libros autenticados; /api/control acepta iniciar/pausar/detener; /api/replay programa el recorrido histórico; /api/ollama/status comprueba el modelo local; /api/export descarga CSV. No hay endpoint de órdenes reales. Los detalles exactos de payloads y rutas se consultan en la documentación generada.
+
+## Solución de problemas frecuentes
+
+| Mensaje o síntoma | Acción |
+|---|---|
+| Python 3.12 no encontrado | Instalar Python 3.12 y verificar `py -3.12 --version` |
+| Error al ejecutar desde ZIP | Extraer todos los archivos y ejecutar desde carpeta normal |
+| 127.0.0.1 rechaza conexión | Mantener abierto el servidor y esperar Uvicorn running; usar :8000 |
+| Clave incorrecta | Copiar solo el valor de APP_API_KEY en .env de esta instalación |
+| Ollama no disponible | Abrir Ollama y verificar que qwen2.5:3b está descargado |
+| Modelo pendiente | Confirmar que artifacts/ está en esta misma carpeta; reiniciar después de importar |
+| Vela duplicada | Respuesta esperada: no repetir operación. Esperar otra vela diaria |
+| Dato atrasado / API fallida | Revisar conexión y proveedor; conservar error, no inventar precios |
+| Solo hay ocho filas visibles | La tabla muestra las ocho últimas; Exportar CSV guarda todas |
+| Hay HOLD y PnL plano | Puede ser una decisión válida; no forzar operaciones |
+| Explicación del LLM con porcentajes mal | Priorizar cifras estructuradas y controles del backend; documentar limitación |
+
+## Pruebas, evidencia y pendientes
+
+La verificación previa de backend conservó 42 pruebas aprobadas y tres excluidas que requieren TensorFlow/T4 o nuevo entrenamiento. Son controles sintéticos, separados de los 65 registros guardados. La versión 1.1.0 recompila la UI y verifica los cálculos PnL contra la base real. El código del predictor y los archivos de investigación no cambian.
+
+El enlace Colab, los permisos de lectura y los outputs ejecutados deben comprobarse antes de entregar. Si se exige URL online de Git, publicar este repositorio en la cuenta elegida; el bundle local es íntegro pero no equivale a una URL pública. El informe enumera límites de datos y de la evaluación. No se promete aceptación o rentabilidad.
+
+## Reconstrucción desde cero (opcional para revisar esta entrega)
 
 1. Sube `notebooks/Horizonte_Colab.ipynb` a Google Colab.
 2. Selecciona GPU NVIDIA T4 y ejecuta sus celdas en orden. Se guarda el trabajo en Google Drive. Revisa las salidas de auditoría, particiones, modelos y VA.
