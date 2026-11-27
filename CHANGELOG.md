@@ -21,3 +21,11 @@
 El 20-11 se corrigieron el horario original UTC, cobertura y paginación MEXC. La revisión state-actions-v2 limitó las acciones del LLM al estado de la cuenta y guardó la razón original. La evidencia conserva el intento inicial de veinte SELL rechazados y los resultados corregidos por separado.
 
 Estos hitos se documentan retrospectivamente por sus archivos y sesión, no como commits históricos individuales. El Git portable tiene un snapshot de v1.0.0 y el commit real de la actualización v1.1.0.
+
+## Complemento de revisión docente del 26 de noviembre
+
+- Matriz de 35 indicadores y exclusiones justificadas conforme al nuevo aviso.
+- Diagramas Mermaid de arquitectura y flujo; declaración de estrategia long/cash y riesgo ausente.
+- Workflow de build y pruebas preparado, pendiente de ejecución remota.
+- Métricas descriptivas adicionales desde los mismos registros guardados.
+- Sin cambio funcional ni reentrenamiento; la app conserva v1.1.0.

@@ -699,3 +699,14 @@ def test_actual_http_429_response_has_bounded_retries(monkeypatch):
     with pytest.raises(DataError, match='tres intentos'):
         public_get('/api/v3/klines')
     assert len(calls) == 3
+
+
+def test_real_order_route_is_rejected_before_network(monkeypatch):
+    from core.data import public_get
+
+    def forbidden_network(*args, **kwargs):
+        pytest.fail("A forbidden order route reached the network")
+
+    monkeypatch.setattr(httpx, "get", forbidden_network)
+    with pytest.raises(DataError, match="Ruta pública no permitida"):
+        public_get("/api/v3/order", {"symbol": "BTCUSDT"})

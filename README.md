@@ -256,3 +256,11 @@ La primera ejecución local de BTC produjo veinte propuestas SELL sin posición 
 La revisión limita la gramática JSON según saldo, posición y regla de entrada congelada. Sin posición no se ofrece SELL; HOLD siempre está disponible. No se fuerza una compra. El control de riesgo independiente sigue verificando cada propuesta. Los registros incluyen propuesta original, explicación, saldo previo y revisión del agente. No cambian pesos, escaladores, umbrales ni TE académico. Una repetición sobre las mismas fechas después de esta corrección es una demostración de desarrollo, no una nueva evaluación independiente.
 
 Para instalaciones existentes, Horizonte_Correccion_Agente.zip incluye un instalador que exige detener el servidor, respalda código y SQLite, conserva el intento anterior en backups y deja la nueva demostración en una base Paper separada. La aplicación no mezcla los intentos.
+
+## Cruce con la rúbrica de app publicada el 26 de noviembre
+
+Ver [revisión de los 35 indicadores](docs/revision_rubrica_app.md), [diagramas de arquitectura y decisión](docs/arquitectura.md) y [estrategia y límites](docs/estrategia_y_limites.md). La rúbrica es orientativa según el aviso docente; no se declara nivel excelente en todo.
+
+SL/TP y Kelly no están implementados; hay asignación máxima al entrar y pausa por pérdida diaria observada. No hay WebSocket, short, equipo de agentes ponderados, Brier ni prueba de superar tres baselines OOS. El objetivo es retorno, no probabilidad. Fee configurable no demuestra cobertura de costos reales: los registros Paper usan fee=0, slippage=0.0005 y spread no medido.
+
+El workflow `.github/workflows/ci.yml` compila frontend, revisa tipos y ejecuta las pruebas sintéticas de backend sin entrenar. Está preparado para publicarse; su ejecución remota está pendiente. Los datos/modelos son anexos de la entrega y las pruebas usan fixtures, no operaciones reales. El README y el complemento documental se actualizan sin cambiar la versión funcional v1.1.0 ni la estrategia guardada.
